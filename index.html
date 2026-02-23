@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Berlin Places Map</title>
+  <meta name="description" content="An illustrated map of underground or subculture places in Berlin — explore unique neighborhoods, landmarks, and hidden spots through an interactive guide.">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="lukakeso">
+  <meta name="theme-color" content="#1a1a1a">
+  <link rel="canonical" href="https://TODO-YOUR-DOMAIN.com/">
+  <link rel="alternate" hreflang="en" href="https://TODO-YOUR-DOMAIN.com/">
+  <link rel="alternate" hreflang="de" href="https://TODO-YOUR-DOMAIN.com/">
+  <link rel="alternate" hreflang="x-default" href="https://TODO-YOUR-DOMAIN.com/">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+
+  <!-- Open Graph / social sharing -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://TODO-YOUR-DOMAIN.com/">
+  <meta property="og:site_name" content="Berlin Places Map">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:title" content="Berlin Places Map">
+  <meta property="og:description" content="An illustrated map of underground or subculture places in Berlin — explore unique neighborhoods, landmarks, and hidden spots through an interactive guide.">
+  <meta property="og:image" content="https://TODO-YOUR-DOMAIN.com/assets/og_preview.png">
+  <meta property="og:image:alt" content="Illustrated map of Berlin with marked places of interest">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter / X Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@lukakeso">
+  <meta name="twitter:title" content="Berlin Places Map">
+  <meta name="twitter:description" content="An illustrated map of underground or subculture places in Berlin — explore unique neighborhoods, landmarks, and hidden spots through an interactive guide.">
+  <meta name="twitter:image" content="https://TODO-YOUR-DOMAIN.com/assets/og_preview.png">
+
+  <!-- Structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Berlin Places Map",
+    "url": "https://TODO-YOUR-DOMAIN.com/",
+    "description": "An illustrated interactive map of underground or subculture places in Berlin, covering unique landmarks, neighborhoods, and hidden spots.",
+    "applicationCategory": "TravelApplication",
+    "operatingSystem": "Any",
+    "inLanguage": ["en", "de"],
+    "author": {
+      "@type": "Person",
+      "name": "lukakeso"
+    },
+    "about": {
+      "@type": "City",
+      "name": "Berlin",
+      "addressCountry": "DE"
+    }
+  }
+  </script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    /* ── Load screen ──────────────────────────────────────────────── */
+    #load-screen {
+      position: fixed;
+      inset: 0;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+      flex-direction: column;
+      gap: 10px;
+    }
+    #load-screen.hidden { display: none; }
+
+    #load-card {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    #load-card h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
+    #load-card p {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.6;
+    }
+    #load-card code {
+      background: #f0f0f0;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 13px;
+    }
+    #load-btn {
+      padding: 10px 28px;
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    #load-btn:hover { background: #333; }
+    #load-error {
+      font-size: 13px;
+      color: #c0392b;
+      display: none;
+    }
+    #load-error.visible { display: block; }
+
+    /* ── Map ──────────────────────────────────────────────────────── */
+    #map-viewport {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      cursor: grab;
+      user-select: none;
+    }
+    #map-viewport.grabbing  { cursor: grabbing; }
+    /* #map-viewport.edit-mode { cursor: crosshair; } */
+
+    #map-wrapper {
+      position: absolute;
+      top: 0; left: 0;
+      transform-origin: 0 0;
+    }
+
+    /* ── Crosshairs ───────────────────────────────────────────────── */
+    #ch-left, #ch-right, #cv-top, #cv-bottom {
+      position: absolute;
+      pointer-events: none;
+      display: none;
+      opacity: 0.65;
+    }
+    #ch-left, #ch-right {
+      height: 0;
+      border-top: var(--hs-border, 2px) dotted #E74111;
+    }
+    #ch-left  { left: 0; }
+    #ch-right { right: 0; }
+    #cv-top, #cv-bottom {
+      width: 0;
+      border-left: var(--hs-border, 2px) dotted #E74111;
+    }
+    #cv-top    { top: 0; }
+    #cv-bottom { bottom: 0; }
+
+    #map-image {
+      display: block;
+      max-width: none;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    /* ── Hotspots ─────────────────────────────────────────────────── */
+    .hotspot {
+      position: absolute;
+      width: var(--hs-size, 36px);
+      height: var(--hs-size, 36px);
+      cursor: pointer;
+      z-index: 10;
+      clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    }
+
+    .hotspot-ring {
+      position: absolute;
+      inset: var(--hs-inset, 6px);
+      border-radius: 2px;
+      border: var(--hs-border, 2px) solid transparent;
+      background: transparent;
+      transform: rotate(45deg);
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+      pointer-events: none;
+    }
+
+    .hotspot-label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: transparent;
+      pointer-events: none;
+      transition: color 0.15s;
+      visibility: hidden; /* hidden for now; remove to re-enable numbers */
+    }
+
+    /* Normal hover */
+    .hotspot:hover .hotspot-ring {
+      border-color: #E74111;
+      background: rgba(231, 65, 17, 0.12);
+      box-shadow: 0 0 8px rgba(231, 65, 17, 0.40);
+    }
+    .hotspot:hover .hotspot-label { color: #fff; }
+
+    /* Edit mode styles — disabled
+    .edit-mode .hotspot-ring { background: rgba(231, 65, 17, 0.08); }
+    .edit-mode .hotspot-label { color: rgba(231, 65, 17, 0.80); }
+    .edit-mode .hotspot:hover .hotspot-ring {
+      background: rgba(231, 65, 17, 0.28);
+      box-shadow: 0 0 10px rgba(231, 65, 17, 0.45);
+    } */
+
+    /* Selected location (panel open) */
+    .hotspot.active .hotspot-ring {
+      border-color: #E74111;
+      background: transparent;
+      box-shadow: 0 0 6px rgba(231, 65, 17, 0.35);
+    }
+
+    /* Cross-reference linked group (persistent until navigating away) */
+    .hotspot.linked .hotspot-ring {
+      border-color: #E74111;
+      background: rgba(231, 65, 17, 0.12);
+      box-shadow: 0 0 8px rgba(231, 65, 17, 0.40);
+    }
+
+    /* Highlighted from text reference hover */
+    .hotspot.highlighted .hotspot-ring {
+      border-color: #E74111;
+      background: rgba(231, 65, 17, 0.18);
+      box-shadow: 0 0 12px rgba(231, 65, 17, 0.55);
+    }
+
+    /* Dragging hotspot styles — disabled
+    .hotspot.dragging-hs { z-index: 20; cursor: grabbing !important; }
+    .hotspot.dragging-hs .hotspot-ring {
+      background: rgba(30, 140, 255, 0.35) !important;
+      border-color: rgba(30, 140, 255, 0.90) !important;
+      box-shadow: 0 0 14px rgba(30, 140, 255, 0.65) !important;
+    }
+    .hotspot.dragging-hs .hotspot-label { color: #1a8cff !important; } */
+
+    /* ── Detail panel ─────────────────────────────────────────────── */
+    #detail-panel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 365px;
+      height: 100vh;
+      background: #faf9f6;
+      border-right: 3px solid #1a1a1a;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Logo area ────────────────────────────────────────────────── */
+    #panel-logo-area {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid #1a1a1a;
+      flex-shrink: 0;
+    }
+    #logo-wrap {
+      position: relative;
+      width: 198px;
+      height: 198px;
+    }
+    #logo-link {
+      display: block;
+      cursor: pointer;
+      text-decoration: none;
+      clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    }
+    #logo-img {
+      display: block;
+      width: 198px;
+      height: 198px;
+      object-fit: contain;
+    }
+    #logo-ring {
+      position: absolute;
+      inset: 28px;
+      border: 4px solid transparent;
+      border-radius: 2px;
+      background: transparent;
+      transform: rotate(45deg);
+      transition: border-color 0.15s, box-shadow 0.15s;
+      pointer-events: none;
+    }
+    #logo-wrap:hover #logo-ring {
+      border-color: #1a1a1a;
+      box-shadow: 0 0 6px rgba(0,0,0,0.20);
+    }
+    #location-image {
+      display: none;
+      width: 100%;
+      max-height: 260px;
+      object-fit: contain;
+    }
+    #detail-panel.has-location-image #logo-wrap    { display: none; }
+    #detail-panel.has-location-image #location-image { display: block; }
+
+    /* ── Language toggle ─────────────────────────────────────────── */
+    #lang-toggle {
+      display: flex;
+      justify-content: center;
+      padding: 10px 20px;
+      border-bottom: 1px solid #1a1a1a;
+      flex-shrink: 0;
+      gap: 0;
+    }
+    .lang-btn {
+      background: none;
+      border: 1px solid #1a1a1a;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      cursor: pointer;
+      padding: 5px 18px;
+      color: #aaa;
+      transition: background 0.15s, color 0.15s;
+    }
+    .lang-btn:first-child { border-right: none; }
+    .lang-btn.active { background: #1a1a1a; color: #fff; }
+    .lang-btn:hover:not(.active) { background: #f0ece6; color: #1a1a1a; }
+
+    /* Hide non-active language content everywhere */
+    body.lang-en [data-lang="de"] { display: none; }
+    body.lang-de [data-lang="en"] { display: none; }
+
+    /* ── Placeholder (no location selected) ───────────────────────── */
+    #panel-placeholder {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 20px 10px;
+      display: flex;
+      flex-direction: column;
+    }
+    #placeholder-intro {
+      font-size: 15px;
+      font-style: italic;
+      color: #c0b8b0;
+      line-height: 1.6;
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    .placeholder-section { margin-bottom: 18px; }
+    .placeholder-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: #bbb;
+      margin-bottom: 5px;
+    }
+    .placeholder-text {
+      font-size: 13px;
+      line-height: 1.75;
+      color: #444;
+      white-space: pre-wrap;
+    }
+    .placeholder-text.empty {
+      color: #ccc;
+      font-style: italic;
+    }
+
+    /* ── GO button ────────────────────────────────────────────────── */
+    #panel-go {
+      padding: 14px 20px;
+      border-top: 1px solid #1a1a1a;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+    #detail-panel.has-location #panel-go { display: none; }
+    #btn-go {
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 10px 40px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    #btn-go:hover { background: #444; }
+
+    /* ── Location details (hidden until a location is selected) ───── */
+    #panel-header { display: none; }
+    #panel-body   { display: none; }
+    #panel-nav    { display: none; }
+
+    #detail-panel.has-location #panel-placeholder { display: none; }
+    #detail-panel.has-location #panel-header      { display: flex; }
+    #detail-panel.has-location #panel-body        { display: block; }
+    #detail-panel.has-location #panel-nav         { display: flex; }
+
+    #panel-header {
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid #1a1a1a;
+      flex-shrink: 0;
+    }
+    #panel-number {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #aaa;
+      margin-bottom: 3px;
+    }
+    #panel-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1.3;
+    }
+    #panel-close {
+      background: none;
+      border: none;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+      color: #bbb;
+      padding: 0 0 0 12px;
+      flex-shrink: 0;
+      transition: color 0.1s;
+    }
+    #panel-close:hover { color: #333; }
+
+    #panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px 10px;
+    }
+    .panel-lang-section { margin-top: 12px; }
+    .panel-lang-section + .panel-lang-section { margin-top: 14px; }
+    .panel-lang-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: #bbb;
+      margin-bottom: 4px;
+    }
+    .panel-summary {
+      font-size: 13px;
+      line-height: 1.75;
+      color: #444;
+      white-space: pre-wrap;
+    }
+    .panel-summary.empty {
+      color: #ccc;
+      font-style: italic;
+    }
+
+    /* Inline location cross-references like [•4] */
+    .loc-ref {
+      cursor: pointer;
+      color: #E74111;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      text-underline-offset: 2px;
+      white-space: nowrap;
+    }
+    .loc-ref:hover { color: #b83610; }
+
+    #panel-nav {
+      gap: 24px;
+      padding: 18px 20px;
+      border-top: 1px solid #1a1a1a;
+      flex-shrink: 0;
+      justify-content: center;
+    }
+    .nav-btn-wrap {
+      position: relative;
+      flex: none;
+    }
+    .nav-btn-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 5px 6px 5px 4px;
+      border: 3px solid transparent;
+      border-radius: 2px;
+      transform: rotate(45deg);
+      transition: border-color 0.15s, box-shadow 0.15s;
+      pointer-events: none;
+    }
+    .nav-btn-wrap:hover::after {
+      border-color: #E74111;
+      box-shadow: 0 0 6px rgba(231, 65, 17, 0.35);
+    }
+    .nav-btn-wrap:has(button:disabled) { opacity: 0.35; pointer-events: none; }
+    .panel-nav-btn {
+      width: 48px;
+      height: 48px;
+      background: #1a1a1a;
+      border: none;
+      clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+    .nav-btn-wrap:hover .panel-nav-btn { background: #333; }
+    #btn-prev img { transform: translateX(-2px); }
+    .panel-nav-btn img {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* Edit banner + save status — disabled
+    #edit-banner { ... }
+    #save-status { ... } */
+
+    /* ── Zoom controls ────────────────────────────────────────────── */
+    #zoom-controls {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      z-index: 200;
+    }
+    .zoom-btn {
+      width: 36px;
+      height: 36px;
+      background: rgba(255,255,255,0.88);
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 6px;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+      color: #333;
+      transition: background 0.1s;
+    }
+    .zoom-btn:hover { background: #fff; }
+
+    /* Help hint — disabled
+    #help-hint { ... } */
+  </style>
+</head>
+<body class="lang-en">
+
+<!-- Load screen — shown until places.json is opened -->
+<div id="load-screen">
+  <div id="load-card">
+    <h1>Berlin Places Map</h1>
+    <p>Open <code>places.json</code> to load location data.<br>
+       You'll be able to view locations and edit coordinates.</p>
+    <button id="load-btn">Open places.json</button>
+    <div id="load-error">Could not open file. Please try again.</div>
+  </div>
+</div>
+
+<div id="map-viewport">
+  <div id="map-wrapper">
+    <img id="map-image" src="assets/places_map_upscaled.png" alt="Berlin Places Map" draggable="false">
+    <div id="ch-left"></div>
+    <div id="ch-right"></div>
+    <div id="cv-top"></div>
+    <div id="cv-bottom"></div>
+    <!-- hotspot divs injected by JS -->
+  </div>
+</div>
+
+<!-- <div id="edit-banner"></div> -->
+<!-- <div id="save-status"></div> -->
+
+<div id="detail-panel">
+  <div id="panel-logo-area">
+    <div id="logo-wrap">
+      <a id="logo-link" href="https://www.ventil-verlag.de/titel/1919/places" target="_blank" rel="noopener">
+        <img id="logo-img" src="assets/diamond_logo.png" alt="Places">
+      </a>
+      <div id="logo-ring"></div>
+    </div>
+    <img id="location-image" src="" alt="">
+  </div>
+  <div id="lang-toggle">
+    <button class="lang-btn active" id="lang-en-btn">EN</button>
+    <button class="lang-btn"        id="lang-de-btn">DE</button>
+  </div>
+  <div id="panel-placeholder">
+    <div class="placeholder-section">
+      <div class="placeholder-section-label" data-lang="en">About the Book</div>
+      <div class="placeholder-section-label" data-lang="de">Über das Buch</div>
+      <div id="about-book-en" class="placeholder-text" data-lang="en"></div>
+      <div id="about-book-de" class="placeholder-text" data-lang="de"></div>
+    </div>
+    <div class="placeholder-section">
+      <div class="placeholder-section-label" data-lang="en">Authors</div>
+      <div class="placeholder-section-label" data-lang="de">Autoren</div>
+      <div id="authors-en" class="placeholder-text" data-lang="en"></div>
+      <div id="authors-de" class="placeholder-text" data-lang="de"></div>
+    </div>
+  </div>
+  <div id="panel-go">
+    <p id="placeholder-intro">
+      <span data-lang="en">explore places of Berlin's past</span>
+      <span data-lang="de">erkunde Orte aus Berlins Vergangenheit</span>
+    </p>
+    <button id="btn-go">GO</button>
+  </div>
+  <div id="panel-header">
+    <div>
+      <div id="panel-number"></div>
+      <div id="panel-title"></div>
+    </div>
+    <button id="panel-close" aria-label="Close">×</button>
+  </div>
+  <div id="panel-body">
+    <div class="panel-lang-section" data-lang="en">
+      <div id="panel-summary-en" class="panel-summary"></div>
+    </div>
+    <div class="panel-lang-section" data-lang="de">
+      <div id="panel-summary-de" class="panel-summary"></div>
+    </div>
+  </div>
+  <div id="panel-nav">
+    <div class="nav-btn-wrap"><button class="panel-nav-btn" id="btn-prev" aria-label="Previous"><img src="assets/arrow_left.png" alt=""></button></div>
+    <div class="nav-btn-wrap"><button class="panel-nav-btn" id="btn-next" aria-label="Next"><img src="assets/arrow_right.png" alt=""></button></div>
+  </div>
+</div>
+
+<div id="zoom-controls">
+  <button class="zoom-btn" id="btn-zoom-in"  title="Zoom in">+</button>
+  <button class="zoom-btn" id="btn-zoom-out" title="Zoom out">−</button>
+</div>
+
+<!-- <div id="help-hint">Scroll to zoom · drag to pan</div> -->
+
+<script>
+'use strict';
+
+// ══════════════════════════════════════════════════════════════════════
+//  State
+// ══════════════════════════════════════════════════════════════════════
+let places = {};          // loaded from places.json → data.locations
+let bookData = {};        // full parsed JSON (locations, authors, about_the_book)
+let lang = 'en';          // active language: 'en' | 'de'
+let fileHandle = null;    // FileSystemFileHandle — enables auto-save
+
+let scale = 1, tx = 0, ty = 0;
+let isDragging = false, hasDragged = false;
+let dragStartX = 0, dragStartY = 0, dragOriginTx = 0, dragOriginTy = 0;
+// let editMode = false;
+// let draggingHotspotId = null;
+// let draggingHotspotEl = null;
+let lastTouchDist = 0;
+// let saveStatusTimer = null;
+let activeId = null;     // currently open panel location
+let linkedGroup = new Set(); // IDs linked via bracket reference (source + targets)
+
+let MIN_SCALE = 0.05;
+let MAX_SCALE = 10;
+let imgW = 0, imgH = 0;
+let HOTSPOT_HALF = 18; // half of .hotspot width (36px), overwritten in init()
+
+// ══════════════════════════════════════════════════════════════════════
+//  DOM refs
+// ══════════════════════════════════════════════════════════════════════
+const viewport    = document.getElementById('map-viewport');
+const wrapper     = document.getElementById('map-wrapper');
+const mapImage    = document.getElementById('map-image');
+const detailPanel = document.getElementById('detail-panel');
+// const editBanner  = document.getElementById('edit-banner');
+// const saveStatus  = document.getElementById('save-status');
+const loadScreen  = document.getElementById('load-screen');
+const loadError   = document.getElementById('load-error');
+
+// ══════════════════════════════════════════════════════════════════════
+//  File I/O — uses File System Access API for read + write
+// ══════════════════════════════════════════════════════════════════════
+document.getElementById('load-btn').addEventListener('click', async () => {
+  if (!window.showOpenFilePicker) {
+    loadError.textContent = 'Your browser does not support the File System Access API. Use Chrome, Edge, or Safari 17+.';
+    loadError.classList.add('visible');
+    return;
+  }
+  try {
+    [fileHandle] = await window.showOpenFilePicker({
+      types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }],
+      multiple: false,
+    });
+    const file = await fileHandle.getFile();
+    const data = JSON.parse(await file.text());
+    bookData = data;
+    if (Array.isArray(data.locations)) {
+      places = {};
+      data.locations.forEach(loc => { places[String(loc.id)] = loc; });
+    } else {
+      places = data.locations || data;
+    }
+    populatePlaceholderContent();
+    loadError.classList.remove('visible');
+    loadScreen.classList.add('hidden');
+    if (imgW > 0) buildHotspots(); // image already loaded
+  } catch (err) {
+    if (err.name === 'AbortError') return; // user cancelled picker
+    console.error('Load error:', err);
+    loadError.textContent = 'Failed to read file: ' + err.message;
+    loadError.classList.add('visible');
+  }
+});
+
+/* Edit/save functions — disabled
+async function saveJson() { ... }
+function showSaveStatus(text, fade) { ... }
+*/
+
+// ══════════════════════════════════════════════════════════════════════
+//  Transform helpers
+// ══════════════════════════════════════════════════════════════════════
+function clampPan() {
+  const PANEL_W = 365;
+  const availW  = window.innerWidth - PANEL_W;
+  if (imgW * scale <= availW) {
+    tx = PANEL_W + (availW - imgW * scale) / 2;
+  } else {
+    tx = Math.max(window.innerWidth - imgW * scale, Math.min(PANEL_W, tx));
+  }
+  if (imgH * scale <= window.innerHeight) {
+    ty = (window.innerHeight - imgH * scale) / 2;
+  } else {
+    ty = Math.max(window.innerHeight - imgH * scale, Math.min(0, ty));
+  }
+}
+
+function applyTransform() {
+  clampPan();
+  wrapper.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
+}
+
+function zoomAt(factor, cx, cy) {
+  const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale * factor));
+  if (newScale === scale) return;
+  const imgX = (cx - tx) / scale;
+  const imgY = (cy - ty) / scale;
+  tx = cx - imgX * newScale;
+  ty = cy - imgY * newScale;
+  scale = newScale;
+  applyTransform();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+//  Hotspot rendering
+// ══════════════════════════════════════════════════════════════════════
+function buildHotspots() {
+  // Remove any existing hotspots before re-building
+  document.querySelectorAll('.hotspot').forEach(h => h.remove());
+
+  Object.entries(places).forEach(([id, place]) => {
+    const el = document.createElement('div');
+    el.className = 'hotspot';
+    el.dataset.id = id;
+    el.style.left = (place.relative_map_position.x * imgW - HOTSPOT_HALF) + 'px';
+    el.style.top  = (place.relative_map_position.y * imgH - HOTSPOT_HALF) + 'px';
+    el.innerHTML  = `<div class="hotspot-ring"></div><div class="hotspot-label">${id}</div>`;
+
+    /* edit mousedown — disabled
+    el.addEventListener('mousedown', e => { ... }); */
+
+    el.addEventListener('click', e => {
+      // if (editMode) { e.stopPropagation(); return; }
+      if (hasDragged) return;
+      e.stopPropagation();
+      openPanel(id);
+    });
+
+    wrapper.appendChild(el);
+  });
+
+  applyTransform();
+}
+
+/* Edit mode banner function — disabled
+function updateEditBanner() { ... }
+*/
+
+
+// ══════════════════════════════════════════════════════════════════════
+//  Modal
+// ══════════════════════════════════════════════════════════════════════
+function sortedPlaceIds() {
+  return Object.keys(places).map(Number).sort((a, b) => a - b).map(String);
+}
+
+function openPanel(id) {
+  // Clear linked group unless this location is a member of it
+  if (!linkedGroup.has(id)) linkedGroup.clear();
+
+  const place = places[id];
+  activeId = id;
+
+  document.getElementById('panel-number').textContent = `Location ${id}`;
+  document.getElementById('panel-title').textContent  = place.name || '(unnamed)';
+
+  const enEl = document.getElementById('panel-summary-en');
+  const deEl = document.getElementById('panel-summary-de');
+
+  const textEn = place.description_en || place.summary_en || '';
+  const textDe = place.description_de || place.summary_de || '';
+  enEl.innerHTML = textEn ? md(textEn) : '(no English summary yet)';
+  enEl.classList.toggle('empty', !textEn);
+
+  deEl.innerHTML = textDe ? md(textDe) : '(noch keine deutsche Beschreibung)';
+  deEl.classList.toggle('empty', !textDe);
+
+  const ids = sortedPlaceIds();
+  const idx = ids.indexOf(id);
+  document.getElementById('btn-prev').disabled = idx <= 0;
+  document.getElementById('btn-next').disabled = idx >= ids.length - 1;
+
+  document.querySelectorAll('.hotspot.active').forEach(h => h.classList.remove('active'));
+  const activeEl = wrapper.querySelector(`.hotspot[data-id="${id}"]`);
+  if (activeEl) activeEl.classList.add('active');
+
+  const px = 1 / MIN_SCALE;
+  const cx = place.relative_map_position.x * imgW - px;
+  const cy = place.relative_map_position.y * imgH - px;
+  const gap = HOTSPOT_HALF;
+
+  const chL = document.getElementById('ch-left');
+  const chR = document.getElementById('ch-right');
+  const cvT = document.getElementById('cv-top');
+  const cvB = document.getElementById('cv-bottom');
+
+  chL.style.top   = cy + 'px';
+  chL.style.width = Math.max(0, cx - gap) + 'px';
+  chR.style.top   = cy + 'px';
+  chR.style.left  = (cx + gap) + 'px';
+
+  cvT.style.left   = cx + 'px';
+  cvT.style.height = Math.max(0, cy - gap) + 'px';
+  cvB.style.left   = cx + 'px';
+  cvB.style.top    = (cy + gap) + 'px';
+
+  [chL, chR, cvT, cvB].forEach(el => el.style.display = 'block');
+
+  const locImg = document.getElementById('location-image');
+  if (place.image) {
+    locImg.src = place.image;
+    locImg.alt = place.name || '';
+    detailPanel.classList.add('has-location-image');
+  } else {
+    locImg.src = '';
+    detailPanel.classList.remove('has-location-image');
+  }
+
+  ensureInView(id);
+  applyLinkedGroup();
+  detailPanel.classList.add('has-location');
+}
+
+function ensureInView(id) {
+  const place = places[id];
+  if (!place) return;
+
+  const PANEL_W = 365;
+  const availW  = window.innerWidth - PANEL_W;
+  const viewH   = window.innerHeight;
+  const MARGIN  = 60; // screen-px clearance from edges
+
+  const screenX = place.relative_map_position.x * imgW * scale + tx;
+  const screenY = place.relative_map_position.y * imgH * scale + ty;
+
+  const inView =
+    screenX >= PANEL_W + MARGIN &&
+    screenX <= window.innerWidth - MARGIN &&
+    screenY >= MARGIN &&
+    screenY <= viewH - MARGIN;
+
+  if (inView) return;
+
+  // Pan to center it, keep current zoom
+  tx = PANEL_W + availW / 2 - place.relative_map_position.x * imgW * scale;
+  ty = viewH   / 2          - place.relative_map_position.y * imgH * scale;
+
+  wrapper.style.transition = 'transform 0.45s ease';
+  applyTransform();
+  setTimeout(() => { wrapper.style.transition = ''; }, 450);
+}
+
+function fitGroupInView() {
+  const ids = [...linkedGroup];
+  if (ids.length === 0) return;
+
+  const PANEL_W = 365;
+  const availW  = window.innerWidth - PANEL_W;
+  const viewH   = window.innerHeight;
+  const PAD     = 60; // screen-px margin around the bounding box
+
+  const locs = ids.map(id => places[id]).filter(Boolean);
+  if (locs.length === 0) return;
+
+  // Bounding box in image-space px, expanded by hotspot half-size
+  const HS   = HOTSPOT_HALF;
+  const minX = Math.min(...locs.map(p => p.relative_map_position.x * imgW)) - HS;
+  const maxX = Math.max(...locs.map(p => p.relative_map_position.x * imgW)) + HS;
+  const minY = Math.min(...locs.map(p => p.relative_map_position.y * imgH)) - HS;
+  const maxY = Math.max(...locs.map(p => p.relative_map_position.y * imgH)) + HS;
+
+  const bboxW = maxX - minX;
+  const bboxH = maxY - minY;
+
+  // Scale to fit bbox into viewport with padding
+  let targetScale = Math.min(
+    (availW - PAD * 2) / bboxW,
+    (viewH  - PAD * 2) / bboxH
+  );
+  targetScale = Math.min(targetScale, scale); // never zoom in, only zoom out if needed
+  targetScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, targetScale));
+
+  // Center bbox in the available area
+  const imgCX = (minX + maxX) / 2;
+  const imgCY = (minY + maxY) / 2;
+  scale = targetScale;
+  tx    = PANEL_W + availW / 2 - imgCX * scale;
+  ty    = viewH   / 2          - imgCY * scale;
+
+  wrapper.style.transition = 'transform 0.45s ease';
+  applyTransform();
+  setTimeout(() => { wrapper.style.transition = ''; }, 450);
+}
+
+function applyLinkedGroup() {
+  document.querySelectorAll('.hotspot.linked, .hotspot.highlighted').forEach(h => {
+    h.classList.remove('linked');
+    h.classList.remove('highlighted');
+  });
+  linkedGroup.forEach(id => {
+    const hs = wrapper.querySelector(`.hotspot[data-id="${id}"]`);
+    if (hs) hs.classList.add('linked');
+  });
+}
+
+function closePanel() {
+  linkedGroup.clear();
+  detailPanel.classList.remove('has-location');
+  detailPanel.classList.remove('has-location-image');
+  document.getElementById('location-image').src = '';
+  document.querySelectorAll('.hotspot').forEach(h => {
+    h.classList.remove('active');
+    h.classList.remove('linked');
+    h.classList.remove('highlighted');
+  });
+  ['ch-left','ch-right','cv-top','cv-bottom'].forEach(id =>
+    document.getElementById(id).style.display = 'none');
+  activeId = null;
+}
+
+function md(text) {
+  return text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\[(\d+(?:,\s*\d+)*)\]/g, (_, raw) => {
+      const ids = raw.split(',').map(s => s.trim()).filter(Boolean);
+      return `<span class="loc-ref" data-ids="${ids.join(',')}">[${ids.join(', ')}]</span>`;
+    })
+    .replace(/\n/g, '<br>');
+}
+
+function populatePlaceholderContent() {
+  const ab = bookData.about_the_book || {};
+  const au = bookData.authors || {};
+  const setEl = (id, text, fallback) => {
+    const el = document.getElementById(id);
+    el.innerHTML = text ? md(text) : fallback;
+    el.classList.toggle('empty', !text);
+  };
+  setEl('about-book-en', ab.summary_en, '(no English summary yet)');
+  setEl('about-book-de', ab.summary_de, '(noch keine deutsche Beschreibung)');
+  setEl('authors-en',    au.summary_en, '(no English author info yet)');
+  setEl('authors-de',    au.summary_de, '(noch keine deutschen Autoreninfos)');
+}
+
+document.getElementById('panel-close').addEventListener('click', closePanel);
+
+// ── Location cross-reference links inside panel text ──────────────────
+detailPanel.addEventListener('click', e => {
+  const ref = e.target.closest('.loc-ref');
+  if (!ref) return;
+  const targetIds = ref.dataset.ids.split(',');
+  // Set linked group: source location + all targets
+  linkedGroup = new Set([activeId, ...targetIds].filter(Boolean));
+  if (targetIds[0]) openPanel(targetIds[0]);
+  fitGroupInView();
+});
+detailPanel.addEventListener('mouseover', e => {
+  const ref = e.target.closest('.loc-ref');
+  if (!ref) return;
+  ref.dataset.ids.split(',').forEach(id => {
+    if (!linkedGroup.has(id)) {
+      const hs = wrapper.querySelector(`.hotspot[data-id="${id}"]`);
+      if (hs) hs.classList.add('highlighted');
+    }
+  });
+});
+detailPanel.addEventListener('mouseout', e => {
+  const ref = e.target.closest('.loc-ref');
+  if (!ref) return;
+  document.querySelectorAll('.hotspot.highlighted').forEach(h => {
+    if (!linkedGroup.has(h.dataset.id)) h.classList.remove('highlighted');
+  });
+});
+
+document.getElementById('lang-en-btn').addEventListener('click', () => {
+  lang = 'en';
+  document.body.className = 'lang-en';
+  document.getElementById('lang-en-btn').classList.add('active');
+  document.getElementById('lang-de-btn').classList.remove('active');
+  document.getElementById('btn-go').textContent = 'GO';
+});
+document.getElementById('lang-de-btn').addEventListener('click', () => {
+  lang = 'de';
+  document.body.className = 'lang-de';
+  document.getElementById('lang-de-btn').classList.add('active');
+  document.getElementById('lang-en-btn').classList.remove('active');
+  document.getElementById('btn-go').textContent = 'LOS';
+});
+
+document.getElementById('btn-go').addEventListener('click', () => {
+  linkedGroup.clear();
+  const ids = sortedPlaceIds();
+  if (ids.length > 0) openPanel(ids[0]);
+});
+document.getElementById('btn-prev').addEventListener('click', () => {
+  const ids = sortedPlaceIds();
+  const idx = ids.indexOf(activeId);
+  if (idx > 0) openPanel(ids[idx - 1]);
+});
+document.getElementById('btn-next').addEventListener('click', () => {
+  const ids = sortedPlaceIds();
+  const idx = ids.indexOf(activeId);
+  if (idx < ids.length - 1) openPanel(ids[idx + 1]);
+});
+
+// ══════════════════════════════════════════════════════════════════════
+//  Mouse — pan
+// ══════════════════════════════════════════════════════════════════════
+viewport.addEventListener('mousedown', e => {
+  if (e.button !== 0) return;
+  isDragging   = true;
+  hasDragged   = false;
+  dragStartX   = e.clientX;
+  dragStartY   = e.clientY;
+  dragOriginTx = tx;
+  dragOriginTy = ty;
+  viewport.classList.add('grabbing');
+  e.preventDefault();
+});
+
+window.addEventListener('mousemove', e => {
+  /* edit drag mousemove — disabled
+  if (draggingHotspotId !== null) { ... return; } */
+  if (!isDragging) return;
+  const dx = e.clientX - dragStartX;
+  const dy = e.clientY - dragStartY;
+  if (Math.abs(dx) + Math.abs(dy) > 4) hasDragged = true;
+  tx = dragOriginTx + dx;
+  ty = dragOriginTy + dy;
+  applyTransform();
+});
+
+window.addEventListener('mouseup', e => {
+  /* edit drag mouseup — disabled
+  if (draggingHotspotId !== null) { ... } */
+  isDragging = false;
+  viewport.classList.remove('grabbing');
+});
+
+// ══════════════════════════════════════════════════════════════════════
+//  Mouse wheel — zoom
+// ══════════════════════════════════════════════════════════════════════
+viewport.addEventListener('dblclick', e => {
+  if (!e.target.closest('.hotspot')) closePanel();
+});
+
+viewport.addEventListener('wheel', e => {
+  e.preventDefault();
+  const rect = viewport.getBoundingClientRect();
+  zoomAt(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX - rect.left, e.clientY - rect.top);
+}, { passive: false });
+
+document.getElementById('btn-zoom-in').addEventListener('click',  () =>
+  zoomAt(1.3, (window.innerWidth + 360) / 2, window.innerHeight / 2));
+document.getElementById('btn-zoom-out').addEventListener('click', () =>
+  zoomAt(1 / 1.3, (window.innerWidth + 360) / 2, window.innerHeight / 2));
+
+// ══════════════════════════════════════════════════════════════════════
+//  Touch — pan + pinch zoom
+// ══════════════════════════════════════════════════════════════════════
+viewport.addEventListener('touchstart', e => {
+  e.preventDefault();
+  hasDragged = false;
+  if (e.touches.length === 1) {
+    isDragging   = true;
+    dragStartX   = e.touches[0].clientX;
+    dragStartY   = e.touches[0].clientY;
+    dragOriginTx = tx;
+    dragOriginTy = ty;
+  } else if (e.touches.length === 2) {
+    isDragging    = false;
+    const t0 = e.touches[0], t1 = e.touches[1];
+    lastTouchDist = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
+  }
+}, { passive: false });
+
+viewport.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const rect = viewport.getBoundingClientRect();
+  if (e.touches.length === 1 && isDragging) {
+    const dx = e.touches[0].clientX - dragStartX;
+    const dy = e.touches[0].clientY - dragStartY;
+    if (Math.abs(dx) + Math.abs(dy) > 4) hasDragged = true;
+    tx = dragOriginTx + dx;
+    ty = dragOriginTy + dy;
+    applyTransform();
+  } else if (e.touches.length === 2) {
+    const t0 = e.touches[0], t1 = e.touches[1];
+    const dist = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
+    const cx   = (t0.clientX + t1.clientX) / 2 - rect.left;
+    const cy   = (t0.clientY + t1.clientY) / 2 - rect.top;
+    if (lastTouchDist > 0) zoomAt(dist / lastTouchDist, cx, cy);
+    lastTouchDist = dist;
+  }
+}, { passive: false });
+
+viewport.addEventListener('touchend', e => {
+  if (e.touches.length === 0) isDragging = false;
+}, { passive: false });
+
+// ══════════════════════════════════════════════════════════════════════
+//  Keyboard
+// ══════════════════════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closePanel();
+    return;
+  }
+  /* Edit mode toggle — disabled
+  if ((e.key === 'e' || e.key === 'E') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    editMode = !editMode;
+    viewport.classList.toggle('edit-mode', editMode);
+    updateEditBanner();
+  } */
+});
+
+// ══════════════════════════════════════════════════════════════════════
+//  Init — runs once the map image is ready
+// ══════════════════════════════════════════════════════════════════════
+function init() {
+  imgW = mapImage.naturalWidth;
+  imgH = mapImage.naturalHeight;
+
+  const PANEL_W = 365;
+  const availW  = window.innerWidth - PANEL_W;
+  const fitScale = Math.min(availW / imgW, window.innerHeight / imgH);
+  MIN_SCALE = fitScale;
+  MAX_SCALE = fitScale * 3;
+
+  // Natural size of hotspot in image-space px so it appears ~36px at fit-zoom,
+  // then scales proportionally with the map as you zoom in.
+  const naturalHotspotPx = Math.round(33 / fitScale);
+  HOTSPOT_HALF = naturalHotspotPx / 2;
+  document.documentElement.style.setProperty('--hs-size',   naturalHotspotPx + 'px');
+  document.documentElement.style.setProperty('--hs-inset',  Math.round(5 / fitScale) + 'px');
+  document.documentElement.style.setProperty('--hs-border', Math.round(3 / fitScale) + 'px');
+
+  scale = fitScale;
+  tx = PANEL_W + (availW - imgW * scale) / 2;
+  ty = (window.innerHeight - imgH * scale) / 2;
+
+  wrapper.style.width  = imgW + 'px';
+  wrapper.style.height = imgH + 'px';
+  mapImage.style.width  = imgW + 'px';
+  mapImage.style.height = imgH + 'px';
+
+  applyTransform();
+
+  // If places were already loaded before image finished, render now
+  if (Object.keys(places).length > 0) buildHotspots();
+}
+
+if (mapImage.complete && mapImage.naturalWidth > 0) {
+  init();
+} else {
+  mapImage.addEventListener('load', init);
+  mapImage.addEventListener('error', () => {
+    // Show an error inside the load card, not replacing the whole page
+    document.querySelector('#load-card p').innerHTML =
+      '<strong style="color:#c0392b">Map image not found.</strong><br>' +
+      'Place <code>places_map_upscaled.png</code> in the <code>assets/</code> folder, then reload.';
+  });
+}
+</script>
+</body>
+</html>
