@@ -9,7 +9,7 @@ An interactive web map of the locations featured in the book **"Places — Verga
 The book is published by **Ventil Verlag**, an independent publisher based in Mainz specializing in music, subculture, and social movements.
 → [Buy or learn more at Ventil Verlag](https://www.ventil-verlag.de/titel/1919/places)
 
-<img src="assets/places_map_upscaled.png" width="480" alt="Berlin Places Map">
+<img src="assets/places_map_upscaled.png" width="640" alt="Berlin Places Map">
 
 ## About this Project
 
