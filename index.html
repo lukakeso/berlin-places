@@ -698,6 +698,29 @@ const loadScreen  = document.getElementById('load-screen');
 const loadError   = document.getElementById('load-error');
 
 // ══════════════════════════════════════════════════════════════════════
+//  Auto-fetch places.json when served over HTTP
+// ══════════════════════════════════════════════════════════════════════
+function initPlaces(data) {
+  bookData = data;
+  if (Array.isArray(data.locations)) {
+    places = {};
+    data.locations.forEach(loc => { places[String(loc.id)] = loc; });
+  } else {
+    places = data.locations || data;
+  }
+  populatePlaceholderContent();
+  loadScreen.classList.add('hidden');
+  if (imgW > 0) buildHotspots();
+}
+
+if (location.protocol !== 'file:') {
+  fetch('places.json')
+    .then(r => r.json())
+    .then(initPlaces)
+    .catch(() => { /* server fetch failed — fall through to manual picker */ });
+}
+
+// ══════════════════════════════════════════════════════════════════════
 //  File I/O — uses File System Access API for read + write
 // ══════════════════════════════════════════════════════════════════════
 document.getElementById('load-btn').addEventListener('click', async () => {
