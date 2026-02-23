@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://TODO-YOUR-DOMAIN.com/sitemap.xml
+Sitemap: https://lukakeso.github.io/berlin-places/sitemap.xml
