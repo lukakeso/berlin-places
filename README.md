@@ -9,6 +9,8 @@ An interactive web map of the locations featured in the book **"Places — Verga
 The book is published by **Ventil Verlag**, an independent publisher based in Mainz specializing in music, subculture, and social movements.
 → [Buy or learn more at Ventil Verlag](https://www.ventil-verlag.de/titel/1919/places)
 
+<img src="assets/places_map_upscaled.png" width="480" alt="Berlin Places Map">
+
 ## About this Project
 
 This map is a hobby project. I love the book and wanted to give its stories an interactive dimension — a way to read stories and browse the locations on an actual map of Berlin, and get a feel for just how spread out (and how layered) the city's underground history really is.
