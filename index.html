@@ -75,7 +75,7 @@
 
     body {
       width: 100vw;
-      height: 100vh;
+      height: 100dvh;
       overflow: hidden;
       background: #fff;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -141,7 +141,7 @@
     #map-viewport {
       position: relative;
       width: 100vw;
-      height: 100vh;
+      height: 100dvh;
       overflow: hidden;
       cursor: grab;
       user-select: none;
@@ -187,6 +187,7 @@
       position: absolute;
       width: var(--hs-size, 36px);
       height: var(--hs-size, 36px);
+      transform: translate(-50%, -50%);
       cursor: pointer;
       z-index: 10;
       clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
@@ -269,7 +270,7 @@
       top: 0;
       left: 0;
       width: 365px;
-      height: 100vh;
+      height: 100dvh;
       background: #faf9f6;
       border-right: 3px solid #1a1a1a;
       z-index: 1000;
@@ -280,9 +281,9 @@
     /* ── Logo area ────────────────────────────────────────────────── */
     #panel-logo-area {
       display: flex;
-      justify-content: center;
+      flex-direction: row;
       align-items: center;
-      padding: 24px 20px 20px;
+      padding: 20px 20px 20px 16px;
       border-bottom: 1px solid #1a1a1a;
       flex-shrink: 0;
     }
@@ -290,6 +291,7 @@
       position: relative;
       width: 198px;
       height: 198px;
+      margin: 0 auto;
     }
     #logo-link {
       display: block;
@@ -326,15 +328,27 @@
     #detail-panel.has-location-image #logo-wrap    { display: none; }
     #detail-panel.has-location-image #location-image { display: block; }
 
-    /* ── Language toggle ─────────────────────────────────────────── */
+    /* ── Language toggle (placeholder state — horizontal) ────────── */
     #lang-toggle {
       display: flex;
+      flex-direction: row;
       justify-content: center;
       padding: 10px 20px;
       border-bottom: 1px solid #1a1a1a;
       flex-shrink: 0;
-      gap: 0;
     }
+    #detail-panel.has-location #lang-toggle { display: none; }
+
+    /* ── Language toggle (header state) — own box, mirrors #lang-toggle */
+    /* lives inside #panel-body — always flex; parent shows/hides */
+    #lang-toggle-header {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      padding: 10px 20px;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
     .lang-btn {
       background: none;
       border: 1px solid #1a1a1a;
@@ -346,7 +360,10 @@
       color: #aaa;
       transition: background 0.15s, color 0.15s;
     }
-    .lang-btn:first-child { border-right: none; }
+    /* horizontal toggle: remove right border on EN */
+    #lang-toggle .lang-btn:first-child { border-right: none; }
+    /* horizontal toggle: remove right border on EN */
+    #lang-toggle-header .lang-btn:first-child { border-right: none; }
     .lang-btn.active { background: #1a1a1a; color: #fff; }
     .lang-btn:hover:not(.active) { background: #f0ece6; color: #1a1a1a; }
 
@@ -390,17 +407,15 @@
       font-style: italic;
     }
 
-    /* ── GO button ────────────────────────────────────────────────── */
+    /* ── GO button (lives inside #panel-placeholder) ──────────────── */
     #panel-go {
-      padding: 14px 20px;
-      border-top: 1px solid #1a1a1a;
-      flex-shrink: 0;
+      margin-top: auto;
+      padding: 14px 0 4px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 0;
     }
-    #detail-panel.has-location #panel-go { display: none; }
     #btn-go {
       background: #1a1a1a;
       color: #fff;
@@ -416,22 +431,22 @@
     #btn-go:hover { background: #444; }
 
     /* ── Location details (hidden until a location is selected) ───── */
-    #panel-header { display: none; }
     #panel-body   { display: none; }
     #panel-nav    { display: none; }
 
     #detail-panel.has-location #panel-placeholder { display: none; }
-    #detail-panel.has-location #panel-header      { display: flex; }
     #detail-panel.has-location #panel-body        { display: block; }
     #detail-panel.has-location #panel-nav         { display: flex; }
 
+    /* header and toggle live inside #panel-body — always flex; parent shows/hides them */
     #panel-header {
+      display: flex;
       align-items: flex-start;
       justify-content: space-between;
       padding: 18px 20px 14px;
       border-bottom: 1px solid #1a1a1a;
-      flex-shrink: 0;
     }
+    #panel-header > div:first-child { flex: 1; }
     #panel-number {
       font-size: 11px;
       font-weight: 700;
@@ -459,12 +474,26 @@
     }
     #panel-close:hover { color: #333; }
 
+    #panel-text-wrap {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #panel-scroll {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
     #panel-body {
       flex: 1;
       overflow-y: auto;
-      padding: 16px 20px 10px;
+      padding: 0 0 10px;
     }
-    .panel-lang-section { margin-top: 12px; }
+    .panel-lang-section { margin-top: 12px; padding: 0 20px; }
     .panel-lang-section + .panel-lang-section { margin-top: 14px; }
     .panel-lang-label {
       font-size: 10px;
@@ -574,9 +603,160 @@
       transition: background 0.1s;
     }
     .zoom-btn:hover { background: #fff; }
+    #zoom-buttons { display: flex; flex-direction: column; gap: 3px; }
+    #btn-zoom-toggle { display: none; }
+    #btn-zoom-location { display: none; margin-top: 5px; }
+    #detail-panel.has-location ~ #zoom-controls #btn-zoom-location { display: flex; }
 
     /* Help hint — disabled
     #help-hint { ... } */
+
+    /* ── Panel bottom strip ───────────────────────────────────────── */
+    #panel-bottom { flex-shrink: 0; }
+
+    /* ── Drag handle & sec-btn (mobile-only) ─────────────────────── */
+    #panel-drag-handle { display: none; }
+    .sec-btn { display: none; } /* hidden on desktop; shown in mobile block below */
+
+    /* ── Mobile: bottom sheet, same flex-column as desktop ─────────── */
+    @media (max-width: 768px) {
+      /* Panel sits at the bottom; flex-column layout is inherited from base */
+      #detail-panel {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: 67dvh;
+        border-right: none;
+        border-top: none;
+        overflow: hidden;
+      }
+
+      /* Drag handle replaces the border-top — grab here to resize panel */
+      #panel-drag-handle {
+        display: block;
+        height: 6px;
+        background: #1a1a1a;
+        cursor: ns-resize;
+        flex-shrink: 0;
+        touch-action: none;
+      }
+
+      /* Logo area: tighter padding, centred */
+      #panel-logo-area {
+        padding: 12px 16px;
+        justify-content: center;
+      }
+      /* Location image fills edge-to-edge */
+      #detail-panel.has-location-image #panel-logo-area { padding: 0; }
+
+      /* Logo: 25vw diamond (quarter of screen width) */
+      #logo-wrap {
+        width: 25vw;
+        height: 25vw;
+        overflow: visible;
+        flex-shrink: 0;
+        margin: 0;
+      }
+      #logo-link { position: absolute; inset: 0; clip-path: none; }
+      #logo-img  { width: 100%; height: 100%; object-fit: contain; }
+      #logo-ring { inset: 14%; border-width: 2px; }
+
+      /* Location image fills full panel width */
+      #location-image { width: 100%; max-height: none; }
+
+      /* Bottom strip: flex column, pinned to the bottom of the panel */
+      #panel-bottom {
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        margin-top: auto;   /* pushes panel-bottom to the bottom regardless of what's above */
+      }
+
+      /* panel-scroll is the single scroll container on mobile */
+      #panel-scroll { overflow-y: auto; overflow-x: hidden; }
+
+      /* Children don't scroll independently — parent (#panel-scroll) handles it */
+      #panel-placeholder,
+      #panel-body { overflow-y: visible; flex: none; min-height: 0; }
+
+      /* Header: compact padding */
+      #panel-header { padding: 12px 14px 10px; }
+
+      /* Zoom controls: horizontal row above the bottom panel */
+      #zoom-controls {
+        bottom: calc(67dvh + 12px);
+        right: 16px;
+        flex-direction: row;
+        align-items: center;
+      }
+      /* Inner buttons: horizontal, collapsible via max-width */
+      #zoom-buttons {
+        flex-direction: row;
+        max-width: 300px;
+        overflow: hidden;
+        transition: max-width 0.25s ease, opacity 0.2s ease;
+      }
+      #zoom-controls.zoom-collapsed #zoom-buttons {
+        max-width: 0;
+        opacity: 0;
+        pointer-events: none;
+      }
+      #btn-zoom-toggle { display: flex; }
+      /* No top margin needed in horizontal layout */
+      #btn-zoom-location { margin-top: 0; }
+
+      /* Nav row: always visible on mobile (overrides default display:none) */
+      #panel-nav {
+        display: flex;
+        padding: 10px 20px;
+        align-items: center;
+        border-top: 1px solid #1a1a1a;
+      }
+
+      /* Sec-btn toggle buttons — shown in the nav row on mobile */
+      .sec-btn {
+        width: 44px;
+        height: 44px;
+        background: #d4cfc8;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #888;
+        flex-shrink: 0;
+        transition: background 0.15s, color 0.15s;
+      }
+      .sec-btn:hover:not(.active) {
+        background: #bfb9b1;
+        color: #444;
+      }
+      .sec-btn.active {
+        background: #1a1a1a;
+        color: #fff;
+      }
+
+      /* Panel height transition */
+      #detail-panel { transition: height 0.3s ease; }
+      /* Skip height transition when index bar is toggled (bar itself is instant) */
+      #detail-panel.height-instant { transition: none !important; }
+      /* Map hidden: panel covers full screen */
+      #detail-panel.map-hidden { height: 100dvh; }
+
+      /* Text section (incl. logo/image): collapse the wrapper with max-height + fade.
+         100dvh ensures no gap even when the panel is full-height (map hidden). */
+      #panel-text-wrap {
+        max-height: 100dvh;
+        transition: max-height 0.3s ease, opacity 0.25s ease;
+      }
+      #detail-panel.hide-text #panel-text-wrap {
+        max-height: 0;
+        opacity: 0;
+      }
+
+    }
   </style>
 </head>
 <body class="lang-en">
@@ -607,64 +787,108 @@
 <!-- <div id="save-status"></div> -->
 
 <div id="detail-panel">
-  <div id="panel-logo-area">
-    <div id="logo-wrap">
-      <a id="logo-link" href="https://www.ventil-verlag.de/titel/1919/places" target="_blank" rel="noopener">
-        <img id="logo-img" src="assets/diamond_logo.png" alt="Places">
-      </a>
-      <div id="logo-ring"></div>
+  <div id="panel-drag-handle"></div>
+  <div id="panel-text-wrap">
+    <div id="panel-scroll">
+      <div id="panel-logo-area">
+        <div id="logo-wrap">
+          <a id="logo-link" href="https://www.ventil-verlag.de/titel/1919/places" target="_blank" rel="noopener">
+            <img id="logo-img" src="assets/diamond_logo.png" alt="Places">
+          </a>
+          <div id="logo-ring"></div>
+        </div>
+        <img id="location-image" src="" alt="">
+      </div>
+      <div id="lang-toggle">
+        <button class="lang-btn active" id="lang-en-btn">EN</button>
+        <button class="lang-btn"        id="lang-de-btn">DE</button>
+      </div>
+      <div id="panel-placeholder">
+      <div class="placeholder-section">
+        <div class="placeholder-section-label" data-lang="en">About the Book</div>
+        <div class="placeholder-section-label" data-lang="de">Über das Buch</div>
+        <div id="about-book-en" class="placeholder-text" data-lang="en"></div>
+        <div id="about-book-de" class="placeholder-text" data-lang="de"></div>
+      </div>
+      <div class="placeholder-section">
+        <div class="placeholder-section-label" data-lang="en">Authors</div>
+        <div class="placeholder-section-label" data-lang="de">Autoren</div>
+        <div id="authors-en" class="placeholder-text" data-lang="en"></div>
+        <div id="authors-de" class="placeholder-text" data-lang="de"></div>
+      </div>
+      <div id="panel-go">
+        <p id="placeholder-intro">
+          <span data-lang="en">explore places of Berlin's past</span>
+          <span data-lang="de">erkunde Orte aus Berlins Vergangenheit</span>
+        </p>
+        <button id="btn-go">GO</button>
+      </div>
     </div>
-    <img id="location-image" src="" alt="">
-  </div>
-  <div id="lang-toggle">
-    <button class="lang-btn active" id="lang-en-btn">EN</button>
-    <button class="lang-btn"        id="lang-de-btn">DE</button>
-  </div>
-  <div id="panel-placeholder">
-    <div class="placeholder-section">
-      <div class="placeholder-section-label" data-lang="en">About the Book</div>
-      <div class="placeholder-section-label" data-lang="de">Über das Buch</div>
-      <div id="about-book-en" class="placeholder-text" data-lang="en"></div>
-      <div id="about-book-de" class="placeholder-text" data-lang="de"></div>
+    <div id="panel-body">
+      <div id="panel-header">
+        <div>
+          <div id="panel-number"></div>
+          <div id="panel-title"></div>
+        </div>
+        <button id="panel-close" aria-label="Close">×</button>
+      </div>
+      <div id="lang-toggle-header">
+        <button class="lang-btn active" id="lang-en-btn-h">EN</button>
+        <button class="lang-btn"        id="lang-de-btn-h">DE</button>
+      </div>
+      <div class="panel-lang-section" data-lang="en">
+        <div id="panel-summary-en" class="panel-summary"></div>
+      </div>
+      <div class="panel-lang-section" data-lang="de">
+        <div id="panel-summary-de" class="panel-summary"></div>
+      </div>
     </div>
-    <div class="placeholder-section">
-      <div class="placeholder-section-label" data-lang="en">Authors</div>
-      <div class="placeholder-section-label" data-lang="de">Autoren</div>
-      <div id="authors-en" class="placeholder-text" data-lang="en"></div>
-      <div id="authors-de" class="placeholder-text" data-lang="de"></div>
+    </div><!-- /#panel-scroll -->
+  </div><!-- /#panel-text-wrap -->
+  <div id="panel-bottom">
+    <div id="panel-nav">
+      <div class="nav-btn-wrap"><button class="panel-nav-btn" id="btn-prev" aria-label="Previous" disabled><img src="assets/arrow_left.png" alt=""></button></div>
+      <button class="sec-btn active" id="sec-btn-map" title="Toggle map view">
+        <svg width="16" height="16" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 11 L4.5 5 L7.5 9 L10 6.5 L13 11 Z"/>
+        </svg>
+      </button>
+      <button class="sec-btn active" id="sec-btn-txt" title="Toggle text">
+        <svg width="16" height="16" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <line x1="2" y1="4" x2="12" y2="4"/>
+          <line x1="2" y1="7" x2="12" y2="7"/>
+          <line x1="2" y1="10" x2="9" y2="10"/>
+        </svg>
+      </button>
+      <div class="nav-btn-wrap"><button class="panel-nav-btn" id="btn-next" aria-label="Next" disabled><img src="assets/arrow_right.png" alt=""></button></div>
     </div>
-  </div>
-  <div id="panel-go">
-    <p id="placeholder-intro">
-      <span data-lang="en">explore places of Berlin's past</span>
-      <span data-lang="de">erkunde Orte aus Berlins Vergangenheit</span>
-    </p>
-    <button id="btn-go">GO</button>
-  </div>
-  <div id="panel-header">
-    <div>
-      <div id="panel-number"></div>
-      <div id="panel-title"></div>
-    </div>
-    <button id="panel-close" aria-label="Close">×</button>
-  </div>
-  <div id="panel-body">
-    <div class="panel-lang-section" data-lang="en">
-      <div id="panel-summary-en" class="panel-summary"></div>
-    </div>
-    <div class="panel-lang-section" data-lang="de">
-      <div id="panel-summary-de" class="panel-summary"></div>
-    </div>
-  </div>
-  <div id="panel-nav">
-    <div class="nav-btn-wrap"><button class="panel-nav-btn" id="btn-prev" aria-label="Previous"><img src="assets/arrow_left.png" alt=""></button></div>
-    <div class="nav-btn-wrap"><button class="panel-nav-btn" id="btn-next" aria-label="Next"><img src="assets/arrow_right.png" alt=""></button></div>
-  </div>
+  </div><!-- /#panel-bottom -->
 </div>
 
 <div id="zoom-controls">
-  <button class="zoom-btn" id="btn-zoom-in"  title="Zoom in">+</button>
-  <button class="zoom-btn" id="btn-zoom-out" title="Zoom out">−</button>
+  <div id="zoom-buttons">
+    <button class="zoom-btn" id="btn-zoom-in"  title="Zoom in">+</button>
+    <button class="zoom-btn" id="btn-zoom-out" title="Zoom out">−</button>
+    <button class="zoom-btn" id="btn-zoom-location" title="Go to selected location">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <circle cx="8" cy="8" r="5.5"/>
+        <circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none"/>
+        <line x1="8" y1="1" x2="8" y2="3.5"/>
+        <line x1="8" y1="12.5" x2="8" y2="15"/>
+        <line x1="1" y1="8" x2="3.5" y2="8"/>
+        <line x1="12.5" y1="8" x2="15" y2="8"/>
+      </svg>
+    </button>
+    <button class="zoom-btn" id="btn-zoom-fit" title="Fit full map">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="1,5 1,1 5,1"/>
+        <polyline points="11,1 15,1 15,5"/>
+        <polyline points="15,11 15,15 11,15"/>
+        <polyline points="5,15 1,15 1,11"/>
+      </svg>
+    </button>
+  </div>
+  <button class="zoom-btn" id="btn-zoom-toggle" title="Hide zoom controls">×</button>
 </div>
 
 <!-- <div id="help-hint">Scroll to zoom · drag to pan</div> -->
@@ -691,10 +915,24 @@ let lastTouchDist = 0;
 let activeId = null;     // currently open panel location
 let linkedGroup = new Set(); // IDs linked via bracket reference (source + targets)
 
+// Track breakpoint for resize fit-full-map trigger
+let prevIsMobile = window.innerWidth <= 768;
+
+// Mobile section toggle state
+let mobileMapOn = true;   // true = map visible; false = panel covers full screen
+let mobileTxtOn = true;
+let zoomExpanded = true;  // mobile: zoom controls visible
+let autoZoom     = true;  // zoom to location on navigation; toggled by fit/zoom buttons
+let panelH = 0;           // stored panel height in px (draggable; init'd at image load)
+
 let MIN_SCALE = 0.05;
 let MAX_SCALE = 10;
 let imgW = 0, imgH = 0;
-let HOTSPOT_HALF = 18; // half of .hotspot width (36px), overwritten in init()
+let HOTSPOT_HALF = 18; // half of .hotspot width (36px), overwritten in updateHotspotVars()
+let BORDER_SIZE  = 3;  // crosshair line thickness in image-space px, same
+
+function getPanelW() { return window.innerWidth > 768 ? 365 : 0; }
+function getPanelH() { return window.innerWidth <= 768 ? document.getElementById('detail-panel').offsetHeight : 0; }
 
 // ══════════════════════════════════════════════════════════════════════
 //  DOM refs
@@ -709,7 +947,7 @@ const loadScreen  = document.getElementById('load-screen');
 const loadError   = document.getElementById('load-error');
 
 // ══════════════════════════════════════════════════════════════════════
-//  Auto-fetch places.json when served over HTTP
+//  Auto-fetch places.json from the same directory
 // ══════════════════════════════════════════════════════════════════════
 function initPlaces(data) {
   bookData = data;
@@ -724,12 +962,10 @@ function initPlaces(data) {
   if (imgW > 0) buildHotspots();
 }
 
-if (location.protocol !== 'file:') {
-  fetch('places.json')
-    .then(r => r.json())
-    .then(initPlaces)
-    .catch(() => { /* server fetch failed — fall through to manual picker */ });
-}
+fetch('places.json')
+  .then(r => r.json())
+  .then(initPlaces)
+  .catch(() => { /* fetch unavailable (e.g. file://) — fall through to manual picker */ });
 
 // ══════════════════════════════════════════════════════════════════════
 //  File I/O — uses File System Access API for read + write
@@ -775,23 +1011,37 @@ function showSaveStatus(text, fade) { ... }
 //  Transform helpers
 // ══════════════════════════════════════════════════════════════════════
 function clampPan() {
-  const PANEL_W = 365;
-  const availW  = window.innerWidth - PANEL_W;
+  const PANEL_W = getPanelW();
+  const PANEL_H = getPanelH();
+  const availW  = window.innerWidth  - PANEL_W;
+  const availH  = window.innerHeight - PANEL_H;
   if (imgW * scale <= availW) {
     tx = PANEL_W + (availW - imgW * scale) / 2;
   } else {
     tx = Math.max(window.innerWidth - imgW * scale, Math.min(PANEL_W, tx));
   }
-  if (imgH * scale <= window.innerHeight) {
-    ty = (window.innerHeight - imgH * scale) / 2;
+  if (imgH * scale <= availH) {
+    ty = (availH - imgH * scale) / 2;
   } else {
-    ty = Math.max(window.innerHeight - imgH * scale, Math.min(0, ty));
+    ty = Math.max(availH - imgH * scale, Math.min(0, ty));
   }
 }
 
 function applyTransform() {
   clampPan();
   wrapper.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
+}
+
+// Hotspot size at fit zoom = sqrt(map area height) screen-px, scales with zoom.
+function updateHotspotVars() {
+  const mapH      = window.innerHeight - getPanelH();
+  const targetPx  = Math.sqrt(mapH) - mapH**(1/5);
+  const naturalPx = Math.round(targetPx / MIN_SCALE);
+  HOTSPOT_HALF = naturalPx / 2;
+  BORDER_SIZE  = Math.round(targetPx * (3 / 30) / MIN_SCALE);
+  document.documentElement.style.setProperty('--hs-size',   naturalPx + 'px');
+  document.documentElement.style.setProperty('--hs-inset',  Math.round(targetPx * (5 / 30) / MIN_SCALE) + 'px');
+  document.documentElement.style.setProperty('--hs-border', BORDER_SIZE + 'px');
 }
 
 function zoomAt(factor, cx, cy) {
@@ -816,8 +1066,8 @@ function buildHotspots() {
     const el = document.createElement('div');
     el.className = 'hotspot';
     el.dataset.id = id;
-    el.style.left = (place.relative_map_position.x * imgW - HOTSPOT_HALF) + 'px';
-    el.style.top  = (place.relative_map_position.y * imgH - HOTSPOT_HALF) + 'px';
+    el.style.left = (place.relative_map_position.x * imgW) + 'px';
+    el.style.top  = (place.relative_map_position.y * imgH) + 'px';
     el.innerHTML  = `<div class="hotspot-ring"></div><div class="hotspot-label">${id}</div>`;
 
     /* edit mousedown — disabled
@@ -835,6 +1085,7 @@ function buildHotspots() {
 
   applyTransform();
 }
+
 
 /* Edit mode banner function — disabled
 function updateEditBanner() { ... }
@@ -878,24 +1129,24 @@ function openPanel(id) {
   const activeEl = wrapper.querySelector(`.hotspot[data-id="${id}"]`);
   if (activeEl) activeEl.classList.add('active');
 
-  const px = 1 / MIN_SCALE;
-  const cx = place.relative_map_position.x * imgW - px;
-  const cy = place.relative_map_position.y * imgH - px;
+  const cx  = place.relative_map_position.x * imgW;
+  const cy  = place.relative_map_position.y * imgH;
   const gap = HOTSPOT_HALF;
+  const bh  = BORDER_SIZE / 2; // offset so border centre aligns with (cx, cy)
 
   const chL = document.getElementById('ch-left');
   const chR = document.getElementById('ch-right');
   const cvT = document.getElementById('cv-top');
   const cvB = document.getElementById('cv-bottom');
 
-  chL.style.top   = cy + 'px';
+  chL.style.top   = (cy - bh) + 'px';
   chL.style.width = Math.max(0, cx - gap) + 'px';
-  chR.style.top   = cy + 'px';
+  chR.style.top   = (cy - bh) + 'px';
   chR.style.left  = (cx + gap) + 'px';
 
-  cvT.style.left   = cx + 'px';
+  cvT.style.left   = (cx - bh) + 'px';
   cvT.style.height = Math.max(0, cy - gap) + 'px';
-  cvB.style.left   = cx + 'px';
+  cvB.style.left   = (cx - bh) + 'px';
   cvB.style.top    = (cy + gap) + 'px';
 
   [chL, chR, cvT, cvB].forEach(el => el.style.display = 'block');
@@ -910,18 +1161,26 @@ function openPanel(id) {
     detailPanel.classList.remove('has-location-image');
   }
 
-  ensureInView(id);
+  document.getElementById('panel-scroll').scrollTop = 0;
+  document.getElementById('panel-body').scrollTop = 0;
+  if (autoZoom) {
+    zoomToActive();
+  } else {
+    ensureInView(id);
+  }
   applyLinkedGroup();
   detailPanel.classList.add('has-location');
+
 }
 
 function ensureInView(id) {
   const place = places[id];
   if (!place) return;
 
-  const PANEL_W = 365;
-  const availW  = window.innerWidth - PANEL_W;
-  const viewH   = window.innerHeight;
+  const PANEL_W = getPanelW();
+  const PANEL_H = getPanelH();
+  const availW  = window.innerWidth  - PANEL_W;
+  const availH  = window.innerHeight - PANEL_H;
   const MARGIN  = 60; // screen-px clearance from edges
 
   const screenX = place.relative_map_position.x * imgW * scale + tx;
@@ -931,26 +1190,22 @@ function ensureInView(id) {
     screenX >= PANEL_W + MARGIN &&
     screenX <= window.innerWidth - MARGIN &&
     screenY >= MARGIN &&
-    screenY <= viewH - MARGIN;
+    screenY <= availH - MARGIN;
 
   if (inView) return;
 
-  // Pan to center it, keep current zoom
-  tx = PANEL_W + availW / 2 - place.relative_map_position.x * imgW * scale;
-  ty = viewH   / 2          - place.relative_map_position.y * imgH * scale;
-
-  wrapper.style.transition = 'transform 0.45s ease';
-  applyTransform();
-  setTimeout(() => { wrapper.style.transition = ''; }, 450);
+  // Pan to center it — use centerOnActive so clampPan doesn't fight the position
+  centerOnActive(true);
 }
 
 function fitGroupInView() {
   const ids = [...linkedGroup];
   if (ids.length === 0) return;
 
-  const PANEL_W = 365;
-  const availW  = window.innerWidth - PANEL_W;
-  const viewH   = window.innerHeight;
+  const PANEL_W = getPanelW();
+  const PANEL_H = getPanelH();
+  const availW  = window.innerWidth  - PANEL_W;
+  const availH  = window.innerHeight - PANEL_H;
   const PAD     = 60; // screen-px margin around the bounding box
 
   const locs = ids.map(id => places[id]).filter(Boolean);
@@ -969,7 +1224,7 @@ function fitGroupInView() {
   // Scale to fit bbox into viewport with padding
   let targetScale = Math.min(
     (availW - PAD * 2) / bboxW,
-    (viewH  - PAD * 2) / bboxH
+    (availH - PAD * 2) / bboxH
   );
   targetScale = Math.min(targetScale, scale); // never zoom in, only zoom out if needed
   targetScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, targetScale));
@@ -979,7 +1234,7 @@ function fitGroupInView() {
   const imgCY = (minY + maxY) / 2;
   scale = targetScale;
   tx    = PANEL_W + availW / 2 - imgCX * scale;
-  ty    = viewH   / 2          - imgCY * scale;
+  ty    = availH  / 2          - imgCY * scale;
 
   wrapper.style.transition = 'transform 0.45s ease';
   applyTransform();
@@ -1010,6 +1265,114 @@ function closePanel() {
   ['ch-left','ch-right','cv-top','cv-bottom'].forEach(id =>
     document.getElementById(id).style.display = 'none');
   activeId = null;
+  document.getElementById('panel-scroll').scrollTop = 0;
+  document.getElementById('btn-prev').disabled = true;
+  document.getElementById('btn-next').disabled = true;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+//  Map positioning helpers
+// ══════════════════════════════════════════════════════════════════════
+
+// Centre the active location in the visible map area at the current scale.
+// Goes through applyTransform so clampPan enforces the same map boundaries
+// as free panning — no whitespace shown at the map edges.
+function centerOnActive(animate) {
+  if (!activeId || !places[activeId]) return;
+  const place  = places[activeId];
+  const PANEL_W = getPanelW();
+  const PANEL_H = getPanelH();
+  const availW  = window.innerWidth  - PANEL_W;
+  const availH  = window.innerHeight - PANEL_H;
+  tx = PANEL_W + availW / 2 - place.relative_map_position.x * imgW * scale;
+  ty = availH  / 2          - place.relative_map_position.y * imgH * scale;
+  if (animate) {
+    wrapper.style.transition = 'transform 0.45s ease';
+    applyTransform();
+    setTimeout(() => { wrapper.style.transition = ''; }, 450);
+  } else {
+    applyTransform();
+  }
+}
+
+function zoomToActive() {
+  if (!activeId || !places[activeId]) return;
+  const zoomFactor = window.innerWidth <= 768 ? 4 : 2.5;
+  if (window.innerWidth <= 768) {
+    const refAvailH  = window.innerHeight * 0.33;
+    const refMinScale = Math.min(window.innerWidth / imgW, refAvailH / imgH);
+    scale = refMinScale * zoomFactor;
+  } else {
+    scale = MIN_SCALE * zoomFactor;
+  }
+  MAX_SCALE = Math.max(MAX_SCALE, scale);
+  centerOnActive(true);
+}
+
+// Fit-full-map helper (recalculates MIN_SCALE for current panel size)
+function fitMap(animate) {
+  const PANEL_W = getPanelW();
+  const PANEL_H = getPanelH();
+  const availW  = window.innerWidth  - PANEL_W;
+  const availH  = window.innerHeight - PANEL_H;
+  MIN_SCALE = Math.min(availW / imgW, availH / imgH);
+  MAX_SCALE = MIN_SCALE * 5;
+  scale = MIN_SCALE;
+  tx = PANEL_W + (availW - imgW * scale) / 2;
+  ty = (availH  - imgH * scale) / 2;
+  if (animate) {
+    wrapper.style.transition = 'transform 0.35s ease';
+    applyTransform();
+    setTimeout(() => { wrapper.style.transition = ''; }, 370);
+  } else {
+    applyTransform();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+//  Mobile section toggles
+// ══════════════════════════════════════════════════════════════════════
+function applyMobileToggles() {
+  if (window.innerWidth > 768) return;
+
+  // Map: hidden = panel covers full screen
+  detailPanel.classList.toggle('map-hidden', !mobileMapOn);
+  document.getElementById('sec-btn-map').classList.toggle('active', mobileMapOn);
+
+  // Text: animate text-wrap (logo + image + text) in/out via max-height
+  detailPanel.classList.toggle('hide-text', !mobileTxtOn);
+  document.getElementById('sec-btn-txt').classList.toggle('active', mobileTxtOn);
+
+  // Panel height: managed via inline style so drag + toggles stay in sync
+  if (!mobileMapOn) {
+    detailPanel.style.height = '100dvh';
+  } else if (!mobileTxtOn) {
+    // Collapse to drag handle + the entire bottom strip
+    const stripH = document.getElementById('panel-drag-handle').offsetHeight
+                 + document.getElementById('panel-bottom').offsetHeight;
+    detailPanel.style.height = stripH + 'px';
+  } else {
+    detailPanel.style.height = panelH + 'px';
+  }
+
+  // Zoom controls: hide when map is fully covered
+  const zc = document.getElementById('zoom-controls');
+  if (!mobileMapOn) {
+    zc.style.display = 'none';
+  } else {
+    zc.style.display = '';
+  }
+
+  // After CSS transitions settle: fit map (if text hidden) or re-centre
+  const hidingText = !mobileTxtOn && mobileMapOn;
+  setTimeout(() => {
+    zc.style.bottom = (detailPanel.offsetHeight + 12) + 'px';
+    if (hidingText) {
+      fitMap(true);
+    } else {
+      applyTransform();
+    }
+  }, 350);
 }
 
 function md(text) {
@@ -1067,20 +1430,19 @@ detailPanel.addEventListener('mouseout', e => {
   });
 });
 
-document.getElementById('lang-en-btn').addEventListener('click', () => {
-  lang = 'en';
-  document.body.className = 'lang-en';
-  document.getElementById('lang-en-btn').classList.add('active');
-  document.getElementById('lang-de-btn').classList.remove('active');
-  document.getElementById('btn-go').textContent = 'GO';
-});
-document.getElementById('lang-de-btn').addEventListener('click', () => {
-  lang = 'de';
-  document.body.className = 'lang-de';
-  document.getElementById('lang-de-btn').classList.add('active');
-  document.getElementById('lang-en-btn').classList.remove('active');
-  document.getElementById('btn-go').textContent = 'LOS';
-});
+function setLang(l) {
+  lang = l;
+  document.body.className = 'lang-' + l;
+  document.getElementById('btn-go').textContent = l === 'en' ? 'GO' : 'LOS';
+  ['', '-h'].forEach(suffix => {
+    document.getElementById('lang-en-btn' + suffix).classList.toggle('active', l === 'en');
+    document.getElementById('lang-de-btn' + suffix).classList.toggle('active', l === 'de');
+  });
+}
+document.getElementById('lang-en-btn').addEventListener('click', () => setLang('en'));
+document.getElementById('lang-de-btn').addEventListener('click', () => setLang('de'));
+document.getElementById('lang-en-btn-h').addEventListener('click', () => setLang('en'));
+document.getElementById('lang-de-btn-h').addEventListener('click', () => setLang('de'));
 
 document.getElementById('btn-go').addEventListener('click', () => {
   linkedGroup.clear();
@@ -1097,6 +1459,92 @@ document.getElementById('btn-next').addEventListener('click', () => {
   const idx = ids.indexOf(activeId);
   if (idx < ids.length - 1) openPanel(ids[idx + 1]);
 });
+
+document.getElementById('sec-btn-map').addEventListener('click', () => {
+  mobileMapOn = !mobileMapOn;
+  applyMobileToggles();
+});
+document.getElementById('sec-btn-txt').addEventListener('click', () => {
+  mobileTxtOn = !mobileTxtOn;
+  applyMobileToggles();
+});
+
+
+// ── Panel drag-to-resize (mobile only) ────────────────────────────────
+(function () {
+  const handle = document.getElementById('panel-drag-handle');
+  let resizeStartY = 0, resizeStartH = 0, resizeStartRatio = 1, resizeStartScale = 0;
+  const MIN_PANEL_H = () =>
+    handle.offsetHeight + document.getElementById('panel-bottom').offsetHeight + 40;
+  const MAX_PANEL_H = () => Math.round(window.innerHeight * 0.92);
+
+  function onMove(clientY) {
+    const delta = resizeStartY - clientY;          // drag up → bigger panel
+    panelH = Math.max(MIN_PANEL_H(), Math.min(MAX_PANEL_H(), resizeStartH + delta));
+    detailPanel.style.height = panelH + 'px';
+    const zc = document.getElementById('zoom-controls');
+    zc.style.bottom = (panelH + 12) + 'px';
+
+    // Always keep MIN_SCALE current for the new available area
+    const PANEL_W = getPanelW();
+    const availW  = window.innerWidth  - PANEL_W;
+    const availH  = window.innerHeight - panelH;
+    MIN_SCALE = Math.min(availW / imgW, availH / imgH);
+    // MAX_SCALE must not drop below the drag-start scale (would cap and cause zoom-out)
+    MAX_SCALE = Math.max(MIN_SCALE * 5, resizeStartScale);
+
+    if (activeId && places[activeId]) {
+      // Preserve zoom ratio from drag start, but never decrease below drag-start scale
+      scale = Math.min(MAX_SCALE, Math.max(resizeStartScale, MIN_SCALE * resizeStartRatio));
+      const pos = places[activeId].relative_map_position;
+      tx = PANEL_W + availW / 2 - pos.x * imgW * scale;
+      ty = availH  / 2          - pos.y * imgH * scale;
+    } else {
+      // No location — refit map to fill available area
+      scale = MIN_SCALE;
+      tx = PANEL_W + (availW - imgW * scale) / 2;
+      ty = (availH  - imgH * scale) / 2;
+    }
+    applyTransform(); // clampPan enforces the same map boundaries as free panning
+  }
+
+  function onEnd() {
+    detailPanel.style.transition = '';
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup',   onEnd);
+    document.removeEventListener('touchmove', onTouchMove);
+    document.removeEventListener('touchend',  onEnd);
+  }
+
+  function onMouseMove(e) { onMove(e.clientY); }
+  function onTouchMove(e) { e.preventDefault(); onMove(e.touches[0].clientY); }
+
+  handle.addEventListener('mousedown', e => {
+    if (window.innerWidth > 768 || !mobileTxtOn || !mobileMapOn) return;
+    e.preventDefault();
+    resizeStartY = e.clientY;
+    resizeStartH = detailPanel.offsetHeight;
+    resizeStartRatio = MIN_SCALE > 0 ? scale / MIN_SCALE : 1;
+    resizeStartScale = scale;
+    detailPanel.style.transition = 'none';
+    wrapper.style.transition = '';   // cancel any in-progress map animation
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup',   onEnd);
+  });
+
+  handle.addEventListener('touchstart', e => {
+    if (window.innerWidth > 768 || !mobileTxtOn || !mobileMapOn) return;
+    e.preventDefault();
+    resizeStartY = e.touches[0].clientY;
+    resizeStartH = detailPanel.offsetHeight;
+    resizeStartRatio = MIN_SCALE > 0 ? scale / MIN_SCALE : 1;
+    resizeStartScale = scale;
+    detailPanel.style.transition = 'none';
+    wrapper.style.transition = '';   // cancel any in-progress map animation
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+    document.addEventListener('touchend',  onEnd);
+  }, { passive: false });
+}());
 
 // ══════════════════════════════════════════════════════════════════════
 //  Mouse — pan
@@ -1150,6 +1598,25 @@ document.getElementById('btn-zoom-in').addEventListener('click',  () =>
 document.getElementById('btn-zoom-out').addEventListener('click', () =>
   zoomAt(1 / 1.3, (window.innerWidth + 360) / 2, window.innerHeight / 2));
 
+document.getElementById('btn-zoom-location').addEventListener('click', () => {
+  autoZoom = true;
+  zoomToActive();
+});
+
+document.getElementById('btn-zoom-fit').addEventListener('click', () => {
+  autoZoom = false;
+  fitMap(true);
+});
+
+document.getElementById('btn-zoom-toggle').addEventListener('click', () => {
+  zoomExpanded = !zoomExpanded;
+  const zc = document.getElementById('zoom-controls');
+  const tb = document.getElementById('btn-zoom-toggle');
+  zc.classList.toggle('zoom-collapsed', !zoomExpanded);
+  tb.textContent = zoomExpanded ? '×' : '≡';
+  tb.title = zoomExpanded ? 'Hide zoom controls' : 'Show zoom controls';
+});
+
 // ══════════════════════════════════════════════════════════════════════
 //  Touch — pan + pinch zoom
 // ══════════════════════════════════════════════════════════════════════
@@ -1193,6 +1660,52 @@ viewport.addEventListener('touchend', e => {
   if (e.touches.length === 0) isDragging = false;
 }, { passive: false });
 
+window.addEventListener('resize', () => {
+  if (imgW === 0) return;
+  const isMobile          = window.innerWidth <= 768;
+  const crossedBreakpoint = isMobile !== prevIsMobile;
+  prevIsMobile = isMobile;
+
+  if (crossedBreakpoint) {
+    // getPanelH() reads offsetHeight which is still at the old layout value
+    // while the CSS media-query transition runs — use the expected dimensions instead.
+    if (isMobile && panelH === 0) panelH = Math.round(window.innerHeight * 0.67);
+    const zc = document.getElementById('zoom-controls');
+    if (isMobile) {
+      detailPanel.style.height = panelH + 'px';
+      zc.style.bottom  = (panelH + 12) + 'px';  // position above panel
+      zc.style.display = '';                      // clear any prior hidden state
+    } else {
+      detailPanel.style.height = '';  // let CSS (100dvh) take over on desktop
+      zc.style.bottom  = '';          // let CSS (bottom: 24px) take over on desktop
+      zc.style.display = '';
+    }
+    const pW = isMobile ? 0 : 365;
+    const pH = isMobile ? panelH : 0;
+    const aW = window.innerWidth  - pW;
+    const aH = window.innerHeight - pH;
+    MIN_SCALE = Math.min(aW / imgW, aH / imgH);
+    MAX_SCALE = MIN_SCALE * 5;
+    updateHotspotVars();  // recalibrate base size for the new layout
+    scale = MIN_SCALE;
+    tx = pW + (aW - imgW * scale) / 2;
+    ty = (aH - imgH * scale) / 2;
+  } else {
+    const PANEL_W     = getPanelW();
+    const PANEL_H     = getPanelH();
+    const availW      = window.innerWidth  - PANEL_W;
+    const availH      = window.innerHeight - PANEL_H;
+    const newFitScale = Math.min(availW / imgW, availH / imgH);
+    const oldMinScale = MIN_SCALE;
+    MIN_SCALE = newFitScale;
+    MAX_SCALE = newFitScale * 5;
+    updateHotspotVars();
+    // Preserve zoom ratio across ordinary resize / orientation change
+    scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale * newFitScale / oldMinScale));
+  }
+  applyTransform();
+});
+
 // ══════════════════════════════════════════════════════════════════════
 //  Keyboard
 // ══════════════════════════════════════════════════════════════════════
@@ -1209,6 +1722,7 @@ document.addEventListener('keydown', e => {
   } */
 });
 
+
 // ══════════════════════════════════════════════════════════════════════
 //  Init — runs once the map image is ready
 // ══════════════════════════════════════════════════════════════════════
@@ -1216,28 +1730,30 @@ function init() {
   imgW = mapImage.naturalWidth;
   imgH = mapImage.naturalHeight;
 
-  const PANEL_W = 365;
-  const availW  = window.innerWidth - PANEL_W;
-  const fitScale = Math.min(availW / imgW, window.innerHeight / imgH);
-  MIN_SCALE = fitScale;
-  MAX_SCALE = fitScale * 3;
-
-  // Natural size of hotspot in image-space px so it appears ~36px at fit-zoom,
-  // then scales proportionally with the map as you zoom in.
-  const naturalHotspotPx = Math.round(33 / fitScale);
-  HOTSPOT_HALF = naturalHotspotPx / 2;
-  document.documentElement.style.setProperty('--hs-size',   naturalHotspotPx + 'px');
-  document.documentElement.style.setProperty('--hs-inset',  Math.round(5 / fitScale) + 'px');
-  document.documentElement.style.setProperty('--hs-border', Math.round(3 / fitScale) + 'px');
-
-  scale = fitScale;
-  tx = PANEL_W + (availW - imgW * scale) / 2;
-  ty = (window.innerHeight - imgH * scale) / 2;
-
   wrapper.style.width  = imgW + 'px';
   wrapper.style.height = imgH + 'px';
   mapImage.style.width  = imgW + 'px';
   mapImage.style.height = imgH + 'px';
+
+  // On mobile, fix panel height first so all subsequent calculations use the
+  // correct available area (avoids mismatch when offsetHeight hasn't settled yet).
+  if (window.innerWidth <= 768) {
+    panelH = detailPanel.offsetHeight || Math.round(window.innerHeight * 0.67);
+    detailPanel.style.height = panelH + 'px';
+  }
+
+  const PANEL_W = getPanelW();
+  const PANEL_H = getPanelH();
+  const availW  = window.innerWidth  - PANEL_W;
+  const availH  = window.innerHeight - PANEL_H;
+  const fitScale = Math.min(availW / imgW, availH / imgH);
+  MIN_SCALE = fitScale;
+  MAX_SCALE = fitScale * 3;
+  updateHotspotVars();
+
+  scale = fitScale;
+  tx = PANEL_W + (availW - imgW * scale) / 2;
+  ty = (availH  - imgH * scale) / 2;
 
   applyTransform();
 
