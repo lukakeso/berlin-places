@@ -920,6 +920,7 @@ let dragStartX = 0, dragStartY = 0, dragOriginTx = 0, dragOriginTy = 0;
 // let draggingHotspotId = null;
 // let draggingHotspotEl = null;
 let lastTouchDist = 0;
+let lastTapTime   = 0;
 // let saveStatusTimer = null;
 let activeId = null;     // currently open panel location
 let linkedGroup = new Set(); // IDs linked via bracket reference (source + targets)
@@ -1673,7 +1674,18 @@ viewport.addEventListener('touchend', e => {
     const t = e.changedTouches[0];
     const el = document.elementFromPoint(t.clientX, t.clientY);
     const hotspot = el && el.closest('.hotspot');
-    if (hotspot) openPanel(hotspot.dataset.id);
+    if (hotspot) {
+      openPanel(hotspot.dataset.id);
+      lastTapTime = 0; // reset so double-tap on hotspot doesn't also close
+    } else {
+      const now = Date.now();
+      if (now - lastTapTime < 300) {
+        closePanel();
+        lastTapTime = 0;
+      } else {
+        lastTapTime = now;
+      }
+    }
   }
 }, { passive: false });
 
