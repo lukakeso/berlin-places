@@ -636,11 +636,20 @@
       /* Drag handle replaces the border-top — grab here to resize panel */
       #panel-drag-handle {
         display: block;
+        position: relative;
         height: 6px;
         background: #1a1a1a;
         cursor: ns-resize;
         flex-shrink: 0;
         touch-action: none;
+      }
+      #panel-drag-handle::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: -12px;    /* extends 12px into the map area above */
+        bottom: -12px; /* extends 12px into the panel below */
       }
 
       /* Logo area: tighter padding, centred */
@@ -1032,15 +1041,15 @@ function applyTransform() {
   wrapper.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
 }
 
-// Hotspot size at fit zoom = sqrt(map area height) screen-px, scales with zoom.
+// Diamond is a fixed fraction of the map image: ~2.75% of √(imgW × imgH) in image-space px.
+// For the Berlin map (7087×4725) this gives naturalPx ≈ 159, appearing ~30px at fit zoom.
+// Adjust the constant to scale all diamonds up or down.
 function updateHotspotVars() {
-  const mapH      = window.innerHeight - getPanelH();
-  const targetPx  = Math.sqrt(mapH) - mapH**(1/5);
-  const naturalPx = Math.round(targetPx / MIN_SCALE);
+  const naturalPx = Math.round(0.030 * Math.sqrt(imgW * imgH));
   HOTSPOT_HALF = naturalPx / 2;
-  BORDER_SIZE  = Math.round(targetPx * (3 / 30) / MIN_SCALE);
+  BORDER_SIZE  = Math.round(naturalPx / 10);
   document.documentElement.style.setProperty('--hs-size',   naturalPx + 'px');
-  document.documentElement.style.setProperty('--hs-inset',  Math.round(targetPx * (5 / 30) / MIN_SCALE) + 'px');
+  document.documentElement.style.setProperty('--hs-inset',  Math.round(naturalPx / 6) + 'px');
   document.documentElement.style.setProperty('--hs-border', BORDER_SIZE + 'px');
 }
 
@@ -1658,6 +1667,14 @@ viewport.addEventListener('touchmove', e => {
 
 viewport.addEventListener('touchend', e => {
   if (e.touches.length === 0) isDragging = false;
+  // click events are suppressed by touchstart's preventDefault, so handle
+  // hotspot taps here directly
+  if (!hasDragged && e.changedTouches.length === 1) {
+    const t = e.changedTouches[0];
+    const el = document.elementFromPoint(t.clientX, t.clientY);
+    const hotspot = el && el.closest('.hotspot');
+    if (hotspot) openPanel(hotspot.dataset.id);
+  }
 }, { passive: false });
 
 window.addEventListener('resize', () => {
