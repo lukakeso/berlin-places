@@ -618,6 +618,15 @@
 
     /* ── Panel bottom strip ───────────────────────────────────────── */
     #panel-bottom { flex-shrink: 0; }
+    #panel-resize-handle {
+      position: absolute;
+      top: 0;
+      right: -3px;
+      width: 9px;
+      height: 100%;
+      cursor: ew-resize;
+      z-index: 1001;
+    }
 
     /* ── Drag handle & sec-btn (mobile-only) ─────────────────────── */
     #panel-drag-handle { display: none; }
@@ -625,6 +634,7 @@
 
     /* ── Mobile: bottom sheet, same flex-column as desktop ─────────── */
     @media (max-width: 768px) {
+      #panel-resize-handle { display: none; }
       /* Panel sits at the bottom; flex-column layout is inherited from base */
       #detail-panel {
         top: auto;
@@ -805,6 +815,7 @@
 
 <div id="detail-panel">
   <div id="panel-drag-handle"></div>
+  <div id="panel-resize-handle"></div>
   <div id="panel-text-wrap">
     <div id="panel-scroll">
       <div id="panel-logo-area">
@@ -948,6 +959,7 @@ let mobileTxtOn = true;
 let zoomExpanded = true;  // mobile: zoom controls visible
 let autoZoom     = true;  // zoom to location on navigation; toggled by fit/zoom buttons
 let panelH = 0;           // stored panel height in px (draggable; init'd at image load)
+let panelW = 0;           // stored panel width in px (0 = use CSS default 365px)
 
 let MIN_SCALE = 0.05;
 let MAX_SCALE = 10;
@@ -955,7 +967,7 @@ let imgW = 0, imgH = 0;
 let HOTSPOT_HALF = 18; // half of .hotspot width (36px), overwritten in updateHotspotVars()
 let BORDER_SIZE  = 3;  // crosshair line thickness in image-space px, same
 
-function getPanelW() { return window.innerWidth > 768 ? 365 : 0; }
+function getPanelW() { return window.innerWidth > 768 ? detailPanel.offsetWidth : 0; }
 function getPanelH() { return window.innerWidth <= 768 ? document.getElementById('detail-panel').offsetHeight : 0; }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -1575,6 +1587,60 @@ document.getElementById('sec-btn-txt').addEventListener('click', () => {
 }());
 
 // ══════════════════════════════════════════════════════════════════════
+//  Panel — horizontal resize (desktop)
+// ══════════════════════════════════════════════════════════════════════
+(function () {
+  const resizeHandle = document.getElementById('panel-resize-handle');
+  const MIN_W = 280;
+  let startX = 0, startW = 0, startScale = 0, startRatio = 0;
+
+  function onMove(clientX) {
+    const maxW   = Math.floor(window.innerWidth / 2);
+    const newW   = Math.max(MIN_W, Math.min(maxW, startW + clientX - startX));
+    panelW = newW;
+    detailPanel.style.width = newW + 'px';
+    const availW = window.innerWidth  - newW;
+    const availH = window.innerHeight;
+    MIN_SCALE = Math.min(availW / imgW, availH / imgH);
+    MAX_SCALE = Math.max(MIN_SCALE * 5, startScale);
+    if (activeId && places[activeId]) {
+      scale = Math.min(MAX_SCALE, Math.max(startScale, MIN_SCALE * startRatio));
+      const pos = places[activeId].relative_map_position;
+      tx = newW + availW / 2 - pos.x * imgW * scale;
+      ty = availH / 2        - pos.y * imgH * scale;
+    } else {
+      scale = MIN_SCALE;
+      tx = newW + (availW - imgW * scale) / 2;
+      ty = (availH - imgH * scale) / 2;
+    }
+    applyTransform();
+  }
+
+  function onEnd() {
+    document.body.style.cursor     = '';
+    document.body.style.userSelect = '';
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup',   onEnd);
+  }
+
+  function onMouseMove(e) { onMove(e.clientX); }
+
+  resizeHandle.addEventListener('mousedown', e => {
+    if (window.innerWidth <= 768) return;
+    e.preventDefault();
+    startX     = e.clientX;
+    startW     = detailPanel.offsetWidth;
+    startScale = scale;
+    startRatio = MIN_SCALE > 0 ? scale / MIN_SCALE : 1;
+    document.body.style.cursor     = 'ew-resize';
+    document.body.style.userSelect = 'none';
+    wrapper.style.transition = '';
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup',   onEnd);
+  });
+}());
+
+// ══════════════════════════════════════════════════════════════════════
 //  Mouse — pan
 // ══════════════════════════════════════════════════════════════════════
 viewport.addEventListener('mousedown', e => {
@@ -1720,14 +1786,16 @@ window.addEventListener('resize', () => {
     const zc = document.getElementById('zoom-controls');
     if (isMobile) {
       detailPanel.style.height = panelH + 'px';
+      detailPanel.style.width  = '';              // let CSS (100%) take over on mobile
       zc.style.bottom  = (panelH + 12) + 'px';  // position above panel
       zc.style.display = '';                      // clear any prior hidden state
     } else {
       detailPanel.style.height = '';  // let CSS (100dvh) take over on desktop
+      if (panelW > 0) detailPanel.style.width = panelW + 'px';  // restore custom width
       zc.style.bottom  = '';          // let CSS (bottom: 24px) take over on desktop
       zc.style.display = '';
     }
-    const pW = isMobile ? 0 : 365;
+    const pW = isMobile ? 0 : detailPanel.offsetWidth;
     const pH = isMobile ? panelH : 0;
     const aW = window.innerWidth  - pW;
     const aH = window.innerHeight - pH;
