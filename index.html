@@ -175,6 +175,7 @@
     #cv-top    { top: 0; }
     #cv-bottom { bottom: 0; }
 
+    #map-wrapper > picture { display: contents; }
     #map-image {
       display: block;
       max-width: none;
@@ -299,6 +300,7 @@
       text-decoration: none;
       clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
     }
+    #logo-link picture { display: contents; }
     #logo-img {
       display: block;
       width: 198px;
@@ -319,6 +321,7 @@
       border-color: #1a1a1a;
       box-shadow: 0 0 6px rgba(0,0,0,0.20);
     }
+    #location-picture { display: contents; }
     #location-image {
       display: none;
       width: 100%;
@@ -564,7 +567,9 @@
       transition: background 0.15s;
     }
     .nav-btn-wrap:hover .panel-nav-btn { background: #333; }
-    #btn-prev img { transform: translateX(-2px); }
+    #btn-prev img { transform: translateX(0px); }
+    #btn-next img { transform: translateX(1px); }
+    .panel-nav-btn picture { display: contents; }
     .panel-nav-btn img {
       width: 40px;
       height: 40px;
@@ -783,7 +788,10 @@
 
 <div id="map-viewport">
   <div id="map-wrapper">
-    <img id="map-image" src="assets/places_map_upscaled.png" alt="Berlin Places Map" draggable="false">
+    <picture>
+      <source type="image/webp" srcset="assets/places_map_upscaled.webp">
+      <img id="map-image" src="assets/places_map_upscaled.png" alt="Berlin Places Map" draggable="false">
+    </picture>
     <div id="ch-left"></div>
     <div id="ch-right"></div>
     <div id="cv-top"></div>
@@ -802,11 +810,17 @@
       <div id="panel-logo-area">
         <div id="logo-wrap">
           <a id="logo-link" href="https://www.ventil-verlag.de/titel/1919/places" target="_blank" rel="noopener">
-            <img id="logo-img" src="assets/diamond_logo.png" alt="Places">
+            <picture>
+              <source type="image/webp" srcset="assets/diamond_logo.webp">
+              <img id="logo-img" src="assets/diamond_logo.png" alt="Places">
+            </picture>
           </a>
           <div id="logo-ring"></div>
         </div>
-        <img id="location-image" src="" alt="">
+        <picture id="location-picture">
+          <source id="location-image-webp" type="image/webp" srcset="">
+          <img id="location-image" src="" alt="">
+        </picture>
       </div>
       <div id="lang-toggle">
         <button class="lang-btn active" id="lang-en-btn">EN</button>
@@ -856,7 +870,7 @@
   </div><!-- /#panel-text-wrap -->
   <div id="panel-bottom">
     <div id="panel-nav">
-      <div class="nav-btn-wrap"><button class="panel-nav-btn" id="btn-prev" aria-label="Previous" disabled><img src="assets/arrow_left.png" alt=""></button></div>
+      <div class="nav-btn-wrap"><button class="panel-nav-btn" id="btn-prev" aria-label="Previous" disabled><picture><source type="image/webp" srcset="assets/arrow_left.webp"><img src="assets/arrow_left.png" alt=""></picture></button></div>
       <button class="sec-btn active" id="sec-btn-map" title="Toggle map view">
         <svg width="16" height="16" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M1 11 L4.5 5 L7.5 9 L10 6.5 L13 11 Z"/>
@@ -869,7 +883,7 @@
           <line x1="2" y1="10" x2="9" y2="10"/>
         </svg>
       </button>
-      <div class="nav-btn-wrap"><button class="panel-nav-btn" id="btn-next" aria-label="Next" disabled><img src="assets/arrow_right.png" alt=""></button></div>
+      <div class="nav-btn-wrap"><button class="panel-nav-btn" id="btn-next" aria-label="Next" disabled><picture><source type="image/webp" srcset="assets/arrow_right.webp"><img src="assets/arrow_right.png" alt=""></picture></button></div>
     </div>
   </div><!-- /#panel-bottom -->
 </div>
@@ -1161,13 +1175,17 @@ function openPanel(id) {
 
   [chL, chR, cvT, cvB].forEach(el => el.style.display = 'block');
 
-  const locImg = document.getElementById('location-image');
+  const locImg    = document.getElementById('location-image');
+  const locSource = document.getElementById('location-image-webp');
   if (place.image) {
-    locImg.src = place.image;
-    locImg.alt = place.name || '';
+    locSource.srcset = place.image.replace(/\.png$/i, '.webp');
+    locImg.src       = place.image;
+    locImg.alt       = place.name || '';
     detailPanel.classList.add('has-location-image');
   } else {
-    locImg.src = '';
+    locSource.srcset = '';
+    locImg.src       = '';
+    locImg.alt       = '';
     detailPanel.classList.remove('has-location-image');
   }
 
