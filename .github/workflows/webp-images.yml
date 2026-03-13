@@ -1,0 +1,29 @@
+name: Convert images to WebP
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'location_images/**'
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install cwebp
+        run: sudo apt-get install -y webp
+
+      - name: Convert PNGs to WebP
+        run: |
+          for file in location_images/*.png; do
+            [ -f "$file" ] || continue
+            cwebp -q 80 "$file" -o "${file%.png}.webp"
+          done
+
+      - name: Commit WebP images
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore: convert images to WebP'
